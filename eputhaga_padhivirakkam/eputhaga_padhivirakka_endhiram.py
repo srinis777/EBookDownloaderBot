@@ -4,7 +4,7 @@ import re
 
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
-import cpsdownloader
+import ragasiya_padhivirakkam
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def send_document(asin, status, bot, chat_id):
-    status = cpsdownloader.get_book_from_local(asin, status)
+    status = ragasiya_padhivirakkam.get_book_from_local(asin, status)
     if 'Error:' in status or not os.path.exists(status):
         bot.send_message(chat_id=chat_id, text='Sorry!!! Could not process download and the error is {}'
                          .format(status))
@@ -40,7 +40,7 @@ def start(bot, update, args):
         bot.send_message(chat_id=chat_id, text="Please provide proper 10 digit ASIN")
         return
     bot.send_message(chat_id=chat_id, text="Initiating download. Please relax for some time")
-    status = cpsdownloader.download_book(asin)
+    status = ragasiya_padhivirakkam.download_book(asin)
     logger.info(' Status of book downloader: {}---'.format(status))
     logger.info('Does book Local Path {}: '.format(str(os.path.exists(status))))
     if 'Error:' in status or not os.path.exists(status):
@@ -66,7 +66,7 @@ def error(bot, update, error):
 
 
 def main():
-    updater = Updater(token='637573336:AAEYi2dkCuAlWqdt9zNXGit6iDIFTO3JfGY')
+    updater = Updater(token='668051538:AAEIRiZdSX3qXCjCE2xLRr3mYTQ4rUG0uno')
     dispatcher = updater.dispatcher
     start_handler = CommandHandler('asin', start, pass_args=True)
     dispatcher.add_handler(start_handler)
