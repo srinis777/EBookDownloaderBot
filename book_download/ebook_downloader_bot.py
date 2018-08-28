@@ -11,6 +11,23 @@ logging.basicConfig(level=logging.DEBUG,
 logger = logging.getLogger(__name__)
 
 
+def send_document(asin, status, bot, chat_id):
+    status = cpsdownloader.get_book_from_local(asin, status)
+    if 'Error:' in status or not os.path.exists(status):
+        bot.send_message(chat_id=chat_id, text='Sorry!!! Could not process download and the error is {}'
+                         .format(status))
+        return
+    try:
+        msg = bot.sendDocument(chat_id=chat_id, document=open(status.strip(), 'rb'), timeout=30000)
+        logger.info("Msg FileID: " + msg.document.file_id)
+    except Exception as e:
+        logger.critical('cannot send document {}'.format(status.strip()))
+        logger.critical(e.message)
+    else:
+        logger.info('successfully sent document {}'.format(status.strip()))
+    finally:
+        os.remove(status.strip())
+
 def start(bot, update, args):
     asin = args[0]
     chat_id = update.message.chat_id
@@ -32,23 +49,15 @@ def start(bot, update, args):
                          timeout=1500)
     else:
         logger.info('Replying back to user')
-        update.message.reply_text("Book Found!!! Please wait for some more time while your book is on the way",
-                                  timeout=1500)
-        status = cpsdownloader.get_book_from_local(asin, status)
-        if 'Error:' in status or not os.path.exists(status):
-            bot.send_message(chat_id=chat_id,
-                             text='Sorry!!! Could not process download and the error is {}'.format(status))
-            return
         try:
-            msg = bot.sendDocument(chat_id=chat_id, document=open(status.strip(), 'rb'), timeout=30000)
-            logger.info("Msg FileID: " + msg.document.file_id)
+            update.message.reply_text("Book Found!!! Please wait for some more time while your book is on the way",
+                                    timeout=1500)
+            send_document(asin, status, bot, chat_id)
         except Exception as e:
-            logger.critical('cannot send document {}'.format(status.strip()))
-            logger.critical(e.message)
-        else:
-            logger.info('successfully sent document {}'.format(status.strip()))
-        finally:
-            os.remove(status.strip())
+            logger.info(e.message)
+            bot.send_message(chat_id=chat_id, text='Book Found!!! Please wait for some more time'
+                                                   ' while your book is on the way')
+            send_document(asin, status, bot, chat_id)
 
 
 def error(bot, update, error):
